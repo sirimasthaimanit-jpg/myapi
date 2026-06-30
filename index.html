@@ -257,16 +257,24 @@
 
         async function fetchDashboardData() {
             try {
-                const response = await fetch(API_URL);
-                const json = await response.json();
+                const response = await fetch(API_URL, { cache: 'no-store' });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
 
+                const json = await response.json();
                 if (json.success && json.data) {
                     renderDashboard(json.data);
+                    const now = new Date();
+                    document.getElementById('last-update').innerText = `SYS_UPTIME: ${now.toLocaleTimeString()}`;
+                } else {
+                    throw new Error('Invalid API payload');
                 }
-                const now = new Date();
-                document.getElementById('last-update').innerText = `SYS_UPTIME: ${now.toLocaleTimeString()}`;
-            } catch (error) { 
-                console.error("API Error:", error); 
+            } catch (error) {
+                console.error("API Error:", error);
+                document.getElementById('last-update').innerText = 'DATA LINK LOST';
+                document.getElementById('controls-grid').innerHTML = '<div class="loading">API CONNECTION FAILED</div>';
+                document.getElementById('sensors-grid').innerHTML = '<div class="loading">CHECK VERCEL PROXY ROUTE</div>';
             }
         }
 
